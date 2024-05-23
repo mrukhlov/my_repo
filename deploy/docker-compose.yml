@@ -1,0 +1,98 @@
+version: '3.9'
+
+services:
+  api: &main_app
+    build:
+      context: .
+      dockerfile: ./deploy/Dockerfile
+      target: prod
+    image: test_task:${TEST_TASK_VERSION:-latest}
+    restart: always
+    env_file:
+    - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rmq:
+        condition: service_healthy
+    environment:
+      TEST_TASK_HOST: 0.0.0.0
+      TEST_TASK_DB_HOST: test_task-db
+      TEST_TASK_DB_PORT: 5432
+      TEST_TASK_DB_USER: test_task
+      TEST_TASK_DB_PASS: test_task
+      TEST_TASK_DB_BASE: test_task
+      TEST_TASK_RABBIT_HOST: test_task-rmq
+      TEST_TASK_REDIS_HOST: test_task-redis
+
+  taskiq-worker:
+    <<: *main_app
+    labels: []
+    command:
+    - taskiq
+    - worker
+    - test_task.tkq:broker
+
+  db:
+    image: postgres:13.8-bullseye
+    hostname: test_task-db
+    environment:
+      POSTGRES_PASSWORD: "test_task"
+      POSTGRES_USER: "test_task"
+      POSTGRES_DB: "test_task"
+    volumes:
+    - test_task-db-data:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: pg_isready -U test_task
+      interval: 2s
+      timeout: 3s
+      retries: 40
+
+  migrator:
+    image: test_task:${TEST_TASK_VERSION:-latest}
+    restart: "no"
+    command: aerich upgrade
+    environment:
+      TEST_TASK_DB_HOST: test_task-db
+      TEST_TASK_DB_PORT: 5432
+      TEST_TASK_DB_USER: test_task
+      TEST_TASK_DB_PASS: test_task
+      TEST_TASK_DB_BASE: test_task
+    depends_on:
+      db:
+        condition: service_healthy
+
+  redis:
+    image: bitnami/redis:6.2.5
+    hostname: "test_task-redis"
+    restart: always
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
+    healthcheck:
+      test: redis-cli ping
+      interval: 1s
+      timeout: 3s
+      retries: 50
+
+  rmq:
+    image: rabbitmq:3.9.16-alpine
+    hostname: "test_task-rmq"
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
+      RABBITMQ_DEFAULT_VHOST: "/"
+    healthcheck:
+      test: rabbitmq-diagnostics check_running -q
+      interval: 3s
+      timeout: 3s
+      retries: 50
+
+
+
+volumes:
+  test_task-db-data:
+    name: test_task-db-data
