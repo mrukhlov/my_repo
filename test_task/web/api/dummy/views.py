@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from fastapi.param_functions import Depends
 
 from test_task.db.dao.dummy_dao import DummyDAO
-from test_task.db.models.dummy_model import DummyModel
+from test_task.db.models.models.dummy_model import DummyModel
 from test_task.web.api.dummy.schema import DummyModelDTO, DummyModelInputDTO
 
 router = APIRouter()

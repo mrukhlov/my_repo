@@ -2,7 +2,9 @@ from typing import List
 
 from test_task.settings import settings
 
-MODELS_MODULES: List[str] = ["test_task.db.models.dummy_model"]  # noqa: WPS407
+MODELS_MODULES: List[str] = [
+    "test_task.db.models.models",
+]  # noqa: WPS407
 
 TORTOISE_CONFIG = {  # noqa: WPS407
     "connections": {

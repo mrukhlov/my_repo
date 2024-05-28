@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from test_task.db.models.dummy_model import DummyModel
+from test_task.db.models.models.dummy_model import DummyModel
 
 
 class DummyDAO:

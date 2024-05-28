@@ -85,6 +85,10 @@ env = [
     "TEST_TASK_ENVIRONMENT=pytest",
     "TEST_TASK_DB_BASE=test_task_test",
 ]
+addopts = [
+    "--import-mode=importlib",
+    "--ignore=dbt_packages",
+]
 [tool.aerich]
 tortoise_orm = "test_task.db.config.TORTOISE_CONFIG"
 location = "./test_task/db/migrations"

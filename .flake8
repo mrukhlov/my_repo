@@ -72,6 +72,10 @@ ignore =
   WPS473,
   ; too many no-cover comments.
   WPS403,
+  ; Possible hardcoded password:.
+  S106,
+  ; Found magic number.
+  WPS432,
 
 per-file-ignores =
   ; all tests
@@ -97,6 +101,8 @@ per-file-ignores =
   F403,
   ; Found wrong metadata variable
   WPS410,
+  ; all init files
+  __init__.py:
 
 exclude =
   ./.cache,
