@@ -4,8 +4,6 @@ from test_task.web.api import (  # noqa: WPS235
     character,
     currency_balance,
     currency_type,
-    dummy,
-    echo,
     equipment,
     inventory,
     monitoring,
@@ -18,7 +16,6 @@ from test_task.web.api import (  # noqa: WPS235
 
 api_router = APIRouter()
 api_router.include_router(monitoring.router)
-api_router.include_router(dummy.router, prefix="/dummy", tags=["dummy"])
 api_router.include_router(
     user_profile.router,
     prefix="/user_profile",
@@ -45,4 +42,3 @@ api_router.include_router(
 api_router.include_router(character.router, prefix="/character", tags=["character"])
 api_router.include_router(redis.router, prefix="/redis", tags=["redis"])
 api_router.include_router(rabbit.router, prefix="/rabbit", tags=["rabbit"])
-api_router.include_router(echo.router, prefix="/echo", tags=["echo"])

@@ -26,7 +26,7 @@ class TransactionDAO:
         :param character_to_id: ID of the character who received the transaction.
         :return: transaction model
         """
-        return await Transaction.create(
+        transaction = await Transaction.create(
             transaction_type=transaction_type,
             amount=amount,
             item_id=item_id,
@@ -34,6 +34,13 @@ class TransactionDAO:
             character_from_id=character_from_id,
             character_to_id=character_to_id,
         )
+        await transaction.fetch_related(
+            "item",
+            "currency_type",
+            "character_from",
+            "character_to",
+        )
+        return transaction
 
     async def get_transaction_by_id(self, transaction_id: int) -> Optional[Transaction]:
         """

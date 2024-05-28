@@ -71,6 +71,7 @@ async def test_edit_character(
         "name": "Updated Character",
         "level": 2,
         "experience": 100,
+        "user_id": create_character.id,
     }
 
     url = fastapi_app.url_path_for(
