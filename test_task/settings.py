@@ -64,6 +64,13 @@ class Settings(BaseSettings):
     rabbit_pool_size: int = 2
     rabbit_channel_pool_size: int = 10
 
+    # JWT variables
+    access_token_expire_minutes: int = 30
+    refresh_token_expire_minutes: int = 60 * 24 * 7
+    algorithm: str = "HS256"
+    jwt_secret_key: str = "JWT_SECRET_KEY"
+    jwt_refresh_secret_key: str = "JWT_REFRESH_SECRET_KEY"
+
     @property
     def db_url(self) -> URL:
         """

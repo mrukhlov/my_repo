@@ -6,22 +6,26 @@ from httpx import AsyncClient
 from starlette import status
 
 from test_task.db.dao.user_dao import UserDAO
+from test_task.db.models.models import Role
 
 
 @pytest.mark.anyio
 async def test_creation(
     fastapi_app: FastAPI,
     client: AsyncClient,
+    create_role: Role,
 ) -> None:
     """Tests user instance creation."""
     url = fastapi_app.url_path_for("create_user_model")
     test_name = uuid.uuid4().hex
+    # role = await Role.get(id=create_role.id)
     response = await client.post(
         url,
         json={
             "username": test_name,
             "email": "test_email",
             "password_hash": "test_password_hash",
+            "role_id": create_role.id,
         },
     )
     assert response.status_code == status.HTTP_200_OK
@@ -34,6 +38,7 @@ async def test_creation(
 async def test_getting(
     fastapi_app: FastAPI,
     client: AsyncClient,
+    create_role: Role,
 ) -> None:
     """Tests user instance retrieval."""
     dao = UserDAO()
@@ -42,6 +47,7 @@ async def test_getting(
         username=test_name,
         email="email",
         password_hash="password_hash",
+        role_id=create_role.id,
     )
     url = fastapi_app.url_path_for("get_user_models")
     response = await client.get(url)
@@ -56,6 +62,7 @@ async def test_getting(
 async def test_edit_user_model(
     fastapi_app: FastAPI,
     client: AsyncClient,
+    create_role: Role,
 ) -> None:
     """Tests user model editing."""
     user_dao = UserDAO()
@@ -66,6 +73,7 @@ async def test_edit_user_model(
         username=test_username,
         email=test_email,
         password_hash=test_password_hash,
+        role_id=create_role.id,
     )
 
     new_username = uuid.uuid4().hex
@@ -78,6 +86,7 @@ async def test_edit_user_model(
             "username": new_username,
             "email": new_email,
             "password_hash": new_password_hash,
+            "role_id": create_role.id,
         },
     )
 
@@ -93,6 +102,7 @@ async def test_edit_user_model(
 async def test_delete_user_model(
     fastapi_app: FastAPI,
     client: AsyncClient,
+    create_role: Role,
 ) -> None:
     """Tests user model deletion."""
     user_dao = UserDAO()
@@ -103,6 +113,7 @@ async def test_delete_user_model(
         username=test_username,
         email=test_email,
         password_hash=test_password_hash,
+        role_id=create_role.id,
     )
 
     url = fastapi_app.url_path_for("delete_user_model", user_id=created_user.id)

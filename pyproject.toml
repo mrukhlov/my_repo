@@ -29,6 +29,10 @@ taskiq = "^0"
 taskiq-fastapi = "^0"
 taskiq-redis = "^0"
 taskiq-aio-pika = "^0"
+pyjwt = "^2.8.0"
+passlib = "^1.7.4"
+python-jose = "^3.3.0"
+pytest-mock = "^3.14.0"
 
 
 [tool.poetry.dev-dependencies]

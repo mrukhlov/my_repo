@@ -1,6 +1,7 @@
 from fastapi.routing import APIRouter
 
 from test_task.web.api import (  # noqa: WPS235
+    auth,
     character,
     currency_balance,
     currency_type,
@@ -16,6 +17,11 @@ from test_task.web.api import (  # noqa: WPS235
 
 api_router = APIRouter()
 api_router.include_router(monitoring.router)
+api_router.include_router(
+    auth.router,
+    prefix="/auth",
+    tags=["auth"],
+)
 api_router.include_router(
     user_profile.router,
     prefix="/user_profile",

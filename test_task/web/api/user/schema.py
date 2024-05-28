@@ -21,3 +21,4 @@ class UserModelInputDTO(BaseModel):
     username: str
     email: str
     password_hash: str
+    role_id: int

@@ -6,19 +6,27 @@ from test_task.db.models.models import User
 class UserDAO:
     """Class for accessing the user table."""
 
-    async def create_user(self, username: str, email: str, password_hash: str) -> User:
+    async def create_user(
+        self,
+        username: str,
+        email: str,
+        password_hash: str,
+        role_id: int,
+    ) -> User:
         """
         Add single user to the database.
 
         :param username: username of the user.
         :param email: email of the user.
         :param password_hash: password hash of the user.
+        :param role_id: role_id of the user.
         :return: user instance.
         """
         return await User.create(
             username=username,
             email=email,
             password_hash=password_hash,
+            role_id=role_id,
         )
 
     async def edit_user(

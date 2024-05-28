@@ -76,6 +76,8 @@ ignore =
   S106,
   ; Found magic number.
   WPS432,
+  ; Possible hardcoded password:.
+  S105,
 
 per-file-ignores =
   ; all tests

@@ -4,6 +4,20 @@ from tortoise.models import Model
 from test_task.db.mixins import TimestampMixin
 
 
+class Role(Model, TimestampMixin):
+    """Role model."""
+
+    id = fields.IntField(pk=True)
+    name = fields.CharField(max_length=255, unique=True)
+    permissions = fields.JSONField()
+
+    user: fields.ReverseRelation["User"]
+
+    class Meta:
+        table = "roles"
+        orm_mode = True
+
+
 class User(Model, TimestampMixin):
     """User model."""
 
@@ -11,6 +25,13 @@ class User(Model, TimestampMixin):
     username = fields.CharField(max_length=255, unique=True)
     email = fields.CharField(max_length=255, unique=True)
     password_hash = fields.CharField(max_length=255)
+    role: fields.ForeignKeyRelation[Role] = fields.ForeignKeyField(
+        "models.Role",
+        related_name="users",
+    )
+    is_active = fields.BooleanField(default=True)
+    is_superuser = fields.BooleanField(default=False)
+    is_verified = fields.BooleanField(default=False)
 
     characters: fields.ReverseRelation["Character"]
     profile: fields.ReverseRelation["UserProfile"]

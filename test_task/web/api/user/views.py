@@ -27,6 +27,22 @@ async def get_user_models(
     return await user_dao.get_all_users(limit=limit, offset=offset)
 
 
+@router.get("/{user_id}/", response_model=UserModelDTO)
+async def get_user_model(
+    user_id: int,
+    user_dao: UserDAO = Depends(),
+) -> UserModelDTO:
+    """
+    Retrieve user object from the database.
+
+    :param user_id: user_id .
+    :param user_dao: DAO for user models.
+    :return: user object from database.
+    """
+    user = await user_dao.get_user_by_id(user_id=user_id)
+    return UserModelDTO.model_validate(user)
+
+
 @router.put("/{user_id}/")
 async def edit_user_model(
     user_id: int,
@@ -80,5 +96,6 @@ async def create_user_model(
         username=new_user_object.username,
         email=new_user_object.email,
         password_hash=new_user_object.password_hash,
+        role_id=new_user_object.role_id,
     )
     return UserModelDTO.model_validate(user)
