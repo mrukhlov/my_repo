@@ -111,3 +111,58 @@ async def test_delete_currency_balance(
         id=create_currency_balance.id,
     ).first()
     assert deleted_currency_balance is None
+
+
+@pytest.mark.anyio
+async def test_top_up_currency_balance_existing_balance(
+    fastapi_app: FastAPI,
+    client: AsyncClient,
+    create_character: Character,
+    create_currency_type: CurrencyType,
+    create_currency_balance: CurrencyBalance,
+) -> None:
+    """Tests topping up an existing currency balance."""
+    url = fastapi_app.url_path_for("top_up_currency_balance")
+    top_up_data = {
+        "character_id": create_character.id,
+        "currency_type_id": create_currency_type.id,
+        "amount": 500,
+    }
+
+    response = await client.post(url, json=top_up_data)
+    assert response.status_code == status.HTTP_200_OK
+
+    dao = CurrencyBalanceDAO()
+    currency_balance = await dao.filter_currency_balances(
+        character_id=create_character.id,
+        currency_type=create_currency_type.id,
+    )
+
+    assert currency_balance[0].balance == create_currency_balance.balance + 500
+
+
+@pytest.mark.anyio
+async def test_top_up_currency_balance_new_balance(
+    fastapi_app: FastAPI,
+    client: AsyncClient,
+    create_character: Character,
+    create_currency_type: CurrencyType,
+) -> None:
+    """Tests topping up a non-existing currency balance."""
+    url = fastapi_app.url_path_for("top_up_currency_balance")
+    top_up_data = {
+        "character_id": create_character.id,
+        "currency_type_id": create_currency_type.id,
+        "amount": 1000,
+    }
+
+    response = await client.post(url, json=top_up_data)
+    assert response.status_code == status.HTTP_200_OK
+
+    dao = CurrencyBalanceDAO()
+    currency_balance = await dao.filter_currency_balances(
+        character_id=create_character.id,
+        currency_type=create_currency_type.id,
+    )
+
+    assert currency_balance[0].balance == 1000

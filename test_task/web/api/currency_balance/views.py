@@ -106,3 +106,34 @@ async def delete_currency_balance_model(
     )
     if currency_balance:
         await currency_balance.delete()
+
+
+@router.post("/top_up_currency_balance/")
+async def top_up_currency_balance(
+    top_up_object: CurrencyBalanceModelInputDTO,
+    currency_balance_dao: CurrencyBalanceDAO = Depends(),
+) -> CurrencyBalanceModelDTO:
+    """
+    Top up currency balance of the character.
+
+    :param top_up_object: data for transfer.
+    :param currency_balance_dao: DAO for currency_balance models.
+    :return: currency_balance object from database.
+    """
+    currency_balance = await currency_balance_dao.filter_currency_balances(
+        character_id=top_up_object.character_id,
+        currency_type=top_up_object.currency_type_id,
+    )
+
+    if currency_balance:
+        currency_balance_object = currency_balance[0]
+        currency_balance_object.balance += top_up_object.amount
+        await currency_balance_object.save()
+    else:
+        currency_balance_object = await currency_balance_dao.create_currency_balance(
+            character_id=top_up_object.character_id,
+            currency_type_id=top_up_object.currency_type_id,
+            balance=top_up_object.amount,
+        )
+
+    return CurrencyBalanceModelDTO.model_validate(currency_balance_object)

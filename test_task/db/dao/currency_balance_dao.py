@@ -67,7 +67,7 @@ class CurrencyBalanceDAO:
     async def filter_currency_balances(
         self,
         character_id: Optional[int] = None,
-        currency_type: Optional[str] = None,
+        currency_type: Optional[int] = None,
     ) -> List[CurrencyBalance]:
         """
         Get specific currency balance models.
@@ -80,7 +80,7 @@ class CurrencyBalanceDAO:
         if character_id:
             filters["character_id"] = character_id
         if currency_type:
-            filters["currency_type"] = currency_type  # type: ignore
+            filters["currency_type_id"] = currency_type  # type: ignore
         return await CurrencyBalance.filter(**filters).all()
 
     async def edit_currency_balance(  # noqa: C901
