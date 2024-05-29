@@ -133,6 +133,7 @@ async def create_character_to(create_user: User) -> AsyncGenerator[Character, No
 @pytest.fixture
 async def create_equipment(
     create_character: Character,
+    create_currency_type: CurrencyType,
 ) -> AsyncGenerator[Equipment, None]:
     """
     Create an equioment item for testing purposes.
@@ -146,6 +147,8 @@ async def create_equipment(
         power=10,
         slot="weapon",
         equipped=False,
+        price=10.0,
+        currency_type=create_currency_type,
     )
     yield equipment
     await equipment.delete()

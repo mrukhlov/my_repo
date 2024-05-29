@@ -66,7 +66,7 @@ async def edit_currency_balance_model(
     """
     await currency_balance_dao.edit_currency_balance(
         balance_id=currency_balance_id,
-        balance=new_currency_balance_object.amount,
+        balance=new_currency_balance_object.amount,  # type: ignore
         character_id=new_currency_balance_object.character_id,
         currency_type_id=new_currency_balance_object.currency_type_id,
     )

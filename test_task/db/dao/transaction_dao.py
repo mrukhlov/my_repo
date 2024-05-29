@@ -8,12 +8,12 @@ class TransactionDAO:
 
     async def create_transaction(  # noqa: WPS211
         self,
-        transaction_type: str,
         amount: int,
         item_id: int,
         currency_type_id: int,
         character_from_id: int,
         character_to_id: int,
+        transaction_type: str | None = None,
     ) -> Transaction:
         """
         Add single transaction to the database.

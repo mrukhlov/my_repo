@@ -3,7 +3,13 @@ from fastapi import FastAPI, status
 from httpx import AsyncClient
 
 from test_task.db.dao.equipment_dao import EquipmentDAO
-from test_task.db.models.models import Character, Equipment
+from test_task.db.models.models import (
+    Character,
+    CurrencyBalance,
+    CurrencyType,
+    Equipment,
+    Transaction,
+)
 
 
 @pytest.mark.anyio
@@ -12,6 +18,7 @@ async def test_create_equipment(  # noqa: WPS218
     fastapi_app: FastAPI,
     client: AsyncClient,
     create_character: Character,
+    create_currency_type: CurrencyType,
 ) -> None:
     """Tests equipment creation."""
     url = fastapi_app.url_path_for("create_equipment_model")
@@ -22,13 +29,16 @@ async def test_create_equipment(  # noqa: WPS218
         "power": 100,
         "slot": "weapon",
         "equipped": False,
+        "currency_type_id": create_currency_type.id,
     }
 
     response = await client.post(url, json=equipment_data)
     assert response.status_code == status.HTTP_200_OK
 
     dao = EquipmentDAO()
-    equipment_list = await dao.filter_equipment(character_id=create_character.id)
+    equipment_list = await dao.filter_equipment(
+        character_id=create_character.id,
+    )
     assert len(equipment_list) == 1
 
     equipment = equipment_list[0]
@@ -73,6 +83,7 @@ async def test_edit_equipment(
     client: AsyncClient,
     create_character: Character,
     create_equipment: Equipment,
+    create_currency_type: CurrencyType,
 ) -> None:
     """Tests equipment editing."""
     new_data = {
@@ -82,6 +93,7 @@ async def test_edit_equipment(
         "power": 150,
         "slot": "chest",
         "equipped": False,
+        "currency_type_id": create_currency_type.id,
     }
 
     url = fastapi_app.url_path_for(
@@ -125,6 +137,7 @@ async def test_equip_equipment(
     client: AsyncClient,
     create_character: Character,
     create_equipment: Equipment,
+    create_currency_type: CurrencyType,
 ) -> None:
     """Tests equipping an item."""
     new_data = {
@@ -134,6 +147,7 @@ async def test_equip_equipment(
         "power": create_equipment.power,
         "slot": create_equipment.slot.value,
         "equipped": True,
+        "currency_type_id": create_currency_type.id,
     }
 
     url = fastapi_app.url_path_for(
@@ -154,6 +168,7 @@ async def test_create_equip_multiple_same_slot(
     client: AsyncClient,
     create_character: Character,
     create_equipment: Equipment,
+    create_currency_type: CurrencyType,
 ) -> None:
     """Tests equipping multiple items of the same slot fails."""
     new_data = {
@@ -163,6 +178,7 @@ async def test_create_equip_multiple_same_slot(
         "power": create_equipment.power,
         "slot": create_equipment.slot.value,
         "equipped": True,
+        "currency_type_id": create_currency_type.id,
     }
 
     url = fastapi_app.url_path_for(
@@ -179,6 +195,8 @@ async def test_create_equip_multiple_same_slot(
         "power": 200,
         "slot": create_equipment.slot.value,
         "equipped": True,
+        "currency_type_id": create_currency_type.id,
+        "price": 10.0,
     }
 
     url = fastapi_app.url_path_for("create_equipment_model")
@@ -206,6 +224,7 @@ async def test_equip_multiple_same_slot(
     client: AsyncClient,
     create_character: Character,
     create_equipment: Equipment,
+    create_currency_type: CurrencyType,
 ) -> None:
     """Tests equipping multiple items of the same slot fails."""
     new_data = {
@@ -215,6 +234,7 @@ async def test_equip_multiple_same_slot(
         "power": create_equipment.power,
         "slot": create_equipment.slot.value,
         "equipped": True,
+        "currency_type_id": create_currency_type.id,
     }
 
     url = fastapi_app.url_path_for(
@@ -231,6 +251,7 @@ async def test_equip_multiple_same_slot(
         "power": 200,
         "slot": create_equipment.slot.value,
         "equipped": True,
+        "currency_type_id": create_currency_type.id,
     }
 
     url = fastapi_app.url_path_for("create_equipment_model")
@@ -245,6 +266,7 @@ async def test_equip_multiple_same_slot(
         "power": 200,
         "slot": create_equipment.slot.value,
         "equipped": True,
+        "currency_type_id": create_currency_type.id,
     }
 
     url = fastapi_app.url_path_for(
@@ -262,3 +284,130 @@ async def test_equip_multiple_same_slot(
     equipment = equipment_list[0]
     await equipment.fetch_related("character")
     assert equipment.name == create_equipment.name
+
+
+@pytest.mark.anyio
+async def test_transfer_item(
+    fastapi_app: FastAPI,
+    client: AsyncClient,
+    create_character_from: Character,
+    create_character_to: Character,
+    create_equipment: Equipment,
+    create_currency_balance: CurrencyBalance,
+) -> None:
+    """Tests transferring an item from one character to another."""
+    create_equipment.character = create_character_from
+    await create_equipment.save()
+    create_currency_balance.character = create_character_from
+    await create_currency_balance.save()
+
+    transfer_data = {
+        "character_from": create_character_from.id,
+        "character_to": create_character_to.id,
+        "item_id": create_equipment.id,
+    }
+
+    url = fastapi_app.url_path_for("transfer_item")
+
+    response = await client.post(url, json=transfer_data)
+    assert response.status_code == status.HTTP_200_OK
+
+    dao = EquipmentDAO()
+    equipment_from = await dao.get_equipment_by_id(create_equipment.id)
+    assert equipment_from.quantity == 0  # type: ignore
+
+    equipment_to = await Equipment.filter(
+        character_id=create_character_to.id,
+    ).first()
+    assert equipment_to
+    assert equipment_to.quantity == 1
+
+    currency_balance_from = await CurrencyBalance.filter(
+        character_id=create_character_from.id,
+    ).first()
+    assert currency_balance_from.balance != 1000  # type: ignore
+
+    transaction_from = await Transaction.filter(
+        character_from_id=create_character_from.id,
+    ).first()
+    assert transaction_from.amount != equipment_from.price * 0.85  # type: ignore
+
+
+@pytest.mark.anyio
+async def test_transfer_non_existent_item(
+    fastapi_app: FastAPI,
+    client: AsyncClient,
+    create_character_from: Character,
+    create_character_to: Character,
+) -> None:
+    """Tests transferring a non-existent item."""
+    transfer_data = {
+        "character_from": create_character_from.id,
+        "character_to": create_character_to.id,
+        "item_id": 999,
+    }
+
+    url = fastapi_app.url_path_for("transfer_item")
+
+    response = await client.post(url, json=transfer_data)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "Character doesn't have this item." in response.json()["detail"]
+
+
+@pytest.mark.anyio
+async def test_transfer_item_to_non_existent_character(
+    fastapi_app: FastAPI,
+    client: AsyncClient,
+    create_character_from: Character,
+    create_equipment: Equipment,
+) -> None:
+    """Tests transferring an item to a non-existent character."""
+    transfer_data = {
+        "character_from": create_character_from.id,
+        "character_to": 999,
+        "item_id": create_equipment.id,
+    }
+
+    url = fastapi_app.url_path_for("transfer_item")
+
+    response = await client.post(url, json=transfer_data)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.anyio
+async def test_transfer_item_not_owned_by_character(
+    fastapi_app: FastAPI,
+    client: AsyncClient,
+    create_character_from: Character,
+    create_character_to: Character,
+    create_currency_balance: CurrencyBalance,
+) -> None:
+    """Tests transferring an item not owned by the character."""
+    # Create an equipment item for the target character instead of the source character
+    other_character_equipment_data = {
+        "name": "Axe of Misfortune",
+        "type": "weapon",
+        "character_id": create_character_to.id,
+        "power": 50,
+        "slot": "weapon",
+        "equipped": False,
+        "price": 100.0,
+        "currency_type_id": 1,
+    }
+
+    url_create = fastapi_app.url_path_for("create_equipment_model")
+    response_create = await client.post(url_create, json=other_character_equipment_data)
+    assert response_create.status_code == status.HTTP_200_OK
+    other_character_equipment_id = response_create.json()["id"]
+
+    transfer_data = {
+        "character_from": create_character_from.id,
+        "character_to": create_character_to.id,
+        "item_id": other_character_equipment_id,
+    }
+
+    url_transfer = fastapi_app.url_path_for("transfer_item")
+
+    response_transfer = await client.post(url_transfer, json=transfer_data)
+    assert response_transfer.status_code == status.HTTP_400_BAD_REQUEST
+    assert "Character doesn't have this item." in response_transfer.json()["detail"]

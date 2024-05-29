@@ -68,7 +68,8 @@ class Character(Model, TimestampMixin):
     currency_balance: fields.ReverseRelation["CurrencyBalance"]
     inventory: fields.ReverseRelation["Inventory"]
     transaction_from: fields.ReverseRelation["Transaction"]
-    transactiony: fields.ReverseRelation["Transaction"]
+    transaction_to: fields.ReverseRelation["Transaction"]
+    transactions: fields.ReverseRelation["Transaction"]
 
     class Meta:
         table = "characters"
@@ -90,12 +91,20 @@ class Equipment(Model, TimestampMixin):
     equipped = fields.BooleanField(
         default=False,
     )
+    price = fields.FloatField(default=0.00)  # noqa: WPS339
+    currency_type: fields.ForeignKeyRelation["CurrencyType"] = fields.ForeignKeyField(
+        "models.CurrencyType",
+        related_name="equipment",
+        null=False,
+    )
+    quantity = fields.IntField(default=1)
 
     transactions: fields.ReverseRelation["Transaction"]
 
     class Meta:
         table = "equipment"
         orm_mode = True
+        unique_together = (("character", "name"),)
 
 
 class UserProfile(Model, TimestampMixin):
@@ -124,6 +133,7 @@ class CurrencyType(Model, TimestampMixin):
 
     transactions: fields.ReverseRelation["Transaction"]
     currency_balances: fields.ReverseRelation["CurrencyBalance"]
+    equipments: fields.ReverseRelation["Equipment"]
 
     class Meta:
         table = "currency_types"
@@ -131,7 +141,7 @@ class CurrencyType(Model, TimestampMixin):
 
 
 class CurrencyBalance(Model, TimestampMixin):
-    """Currency model."""
+    """Currency balance model."""
 
     id = fields.IntField(pk=True)
     character: fields.ForeignKeyRelation[Character] = fields.ForeignKeyField(
@@ -142,20 +152,21 @@ class CurrencyBalance(Model, TimestampMixin):
         "models.CurrencyType",
         related_name="balances",
     )
-    balance = fields.IntField(default=0)
+    balance = fields.FloatField(default=0)
 
     transactions: fields.ReverseRelation["Transaction"]
 
     class Meta:
         table = "currency_balances"
         orm_mode = True
+        unique_together = (("character", "currency_type"),)
 
 
 class Transaction(Model, TimestampMixin):
     """Transaction model."""
 
     id = fields.IntField(pk=True)
-    transaction_type = fields.CharField(max_length=50)
+    transaction_type = fields.CharField(max_length=50, null=True)
     amount = fields.IntField()
     item: fields.ForeignKeyRelation[Equipment] = fields.ForeignKeyField(
         "models.Equipment",

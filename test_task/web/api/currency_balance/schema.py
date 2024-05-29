@@ -11,7 +11,7 @@ class CurrencyBalanceModelDTO(BaseModel):
     id: int
     character_id: int
     currency_type_id: int
-    balance: int
+    balance: float
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -20,4 +20,4 @@ class CurrencyBalanceModelInputDTO(BaseModel):
 
     character_id: int
     currency_type_id: int
-    amount: int
+    amount: float

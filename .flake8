@@ -92,6 +92,10 @@ ignore =
   WPS213,
   ; Found too many `assert` statements.
   WPS218,
+  ; Found too many await expressions.
+  WPS217,
+  ; Found number with meaningless zeros.
+  WPS339,
 
 per-file-ignores =
   ; all tests

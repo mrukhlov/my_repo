@@ -10,20 +10,26 @@ class CurrencyBalanceDAO:
         self,
         character_id: int,
         currency_type_id: int,
-        balance: int = 0,
-    ) -> None:
+        balance: float = 0.00,  # noqa: WPS358
+    ) -> CurrencyBalance:
         """
         Add single currency balance to the database.
 
         :param character_id: ID of the character who owns the currency balance.
         :param currency_type_id: type of the currency (e.g., "gold", "gems").
         :param balance: balance of the currency.
+        :return: currency balance instance
         """
-        await CurrencyBalance.create(
+        balance_object = await CurrencyBalance.create(
             character_id=character_id,
             currency_type_id=currency_type_id,
             balance=balance,
         )
+        await balance_object.fetch_related(
+            "character",
+            "currency_type",
+        )
+        return balance_object
 
     async def get_currency_balance_by_id(
         self,

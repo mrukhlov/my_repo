@@ -19,6 +19,7 @@ class TransactionModelDTO(BaseModel):
     character_to: CharacterModelDTO
     item: Optional[EquipmentModelDTO]
     amount: Optional[int]
+    transaction_type: Optional[str]
     currency_type: Optional[CurrencyTypeModelDTO]
     model_config = ConfigDict(
         from_attributes=True,
@@ -33,5 +34,5 @@ class TransactionModelInputDTO(BaseModel):
     character_from_id: int
     item_id: int
     amount: int
-    transaction_type: str
+    transaction_type: str | None = None
     currency_type_id: int

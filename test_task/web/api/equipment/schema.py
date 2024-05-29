@@ -15,6 +15,8 @@ class EquipmentModelDTO(BaseModel):
     power: int
     slot: str
     equipped: bool
+    price: float
+    currency_type_id: int
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -27,3 +29,13 @@ class EquipmentModelInputDTO(BaseModel):
     power: int = 0
     slot: str
     equipped: bool = False
+    price: float = 0.00
+    currency_type_id: int
+
+
+class TransferEquipmentInputDTO(BaseModel):
+    """DTO for transfer equpment."""
+
+    character_from: int
+    character_to: int
+    item_id: int

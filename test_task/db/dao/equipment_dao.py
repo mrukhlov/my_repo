@@ -1,8 +1,8 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from tortoise.exceptions import ValidationError
 
-from test_task.db.models.models import Character, Equipment
+from test_task.db.models.models import Character, CurrencyType, Equipment
 
 
 class EquipmentDAO:
@@ -14,8 +14,11 @@ class EquipmentDAO:
         eq_type: str,
         character_id: int,
         eq_slot: str,
+        currency_type_id: int,
         power: int = 0,
         equipped: bool = False,
+        price: float = 0.00,
+        quantity: int = 1,
     ) -> Equipment:
         """
         Add single equipment to the database.
@@ -26,6 +29,9 @@ class EquipmentDAO:
         :param power: power of the equipment.
         :param eq_slot: eq_slot of the equipment.
         :param equipped: equipped flag of the equipment.
+        :param price: price of the equipment.
+        :param currency_type_id: currency_type_id of the equipment.
+        :param quantity: quantity of the equipment.
         :return: equipment instance
         """
         if equipped:
@@ -44,8 +50,14 @@ class EquipmentDAO:
             power=power,
             slot=eq_slot,
             equipped=equipped,
+            currency_type_id=currency_type_id,
+            price=price,
+            quantity=quantity,
         )
-        await equipment.fetch_related("character")
+        await equipment.fetch_related(
+            "character",
+            "currency_type",
+        )
         return equipment
 
     async def get_equipment_by_id(self, equipment_id: int) -> Optional[Equipment]:
@@ -57,7 +69,10 @@ class EquipmentDAO:
         """
         equipment = await Equipment.filter(id=equipment_id).first()
         if equipment:
-            await equipment.fetch_related("character")
+            await equipment.fetch_related(
+                "character",
+                "currency_type",
+            )
         return equipment
 
     async def get_all_equipment(self, limit: int, offset: int) -> List[Equipment]:
@@ -70,27 +85,51 @@ class EquipmentDAO:
         """
         return await Equipment.all().offset(offset).limit(limit)
 
-    async def filter_equipment(
+    async def filter_equipment(  # noqa: C901
         self,
+        equipment_id: Optional[int] = None,
         name: Optional[str] = None,
         eq_type: Optional[str] = None,
         character_id: Optional[int] = None,
+        eq_slot: Optional[str] = None,
+        currency_type_id: Optional[int] = None,
+        power: Optional[int] = None,
+        equipped: Optional[bool] = None,
+        price: Optional[float] = None,
     ) -> List[Equipment]:
         """
         Get specific equipment models.
 
+        :param equipment_id: id of equipment instance.
         :param name: name of equipment instance.
         :param eq_type: type of equipment (e.g., "armor", "weapon").
         :param character_id: ID of character who owns the equipment.
+        :param power: power of the equipment.
+        :param eq_slot: eq_slot of the equipment.
+        :param equipped: equipped flag of the equipment.
+        :param price: price of the equipment.
+        :param currency_type_id: currency_type_id of the equipment.
         :return: equipment models.
         """
-        filters = {}
+        filters: Dict[str, Any] = {}
+        if equipment_id:
+            filters["id"] = equipment_id
         if name:
             filters["name"] = name
         if eq_type:
-            filters["type"] = eq_type  # type: ignore
+            filters["type"] = eq_type
         if character_id:
-            filters["character_id"] = character_id  # type: ignore
+            filters["character_id"] = character_id
+        if eq_slot:
+            filters["slot"] = eq_slot
+        if currency_type_id:
+            filters["currency_type_id"] = currency_type_id
+        if power is not None:
+            filters["power"] = power
+        if equipped is not None:
+            filters["equipped"] = equipped
+        if price is not None:
+            filters["price"] = price
         return await Equipment.filter(**filters).all()
 
     async def edit_equipment(  # noqa: C901, WPS211
@@ -102,6 +141,8 @@ class EquipmentDAO:
         power: Optional[int] = None,
         eq_slot: Optional[str] = None,
         equipped: Optional[bool] = None,
+        price: Optional[float] = None,
+        currency_type_id: Optional[int] = None,
     ) -> Optional[Equipment]:
         """
         Edit an existing equipment's details.
@@ -113,6 +154,8 @@ class EquipmentDAO:
         :param power: new power of the equipment (optional).
         :param eq_slot: slot of the equipment.
         :param equipped: equipped flag of the equipment.
+        :param price: price of the equipment.
+        :param currency_type_id: currency_type_id of the equipment.
         :raises ValidationError: HTTPException
         :return: updated equipment instance or None if equipment not found.
         """
@@ -121,6 +164,7 @@ class EquipmentDAO:
             return None
         await equipment.fetch_related(
             "character",
+            "currency_type",
         )
 
         if name is not None:
@@ -133,8 +177,16 @@ class EquipmentDAO:
                 equipment.character = character  # type: ignore
         if power is not None:
             equipment.power = power
+        if price is not None:
+            equipment.price = price  # type: ignore
         if eq_slot is not None:
             equipment.slot = eq_slot  # type: ignore
+        if currency_type_id is not None:
+            currency_type = await CurrencyType.filter(
+                id=currency_type_id,
+            ).first()
+            if character:
+                equipment.currency_type = currency_type  # type: ignore
         if equipped is not None:
             if equipped:
                 existing_equipped = (
