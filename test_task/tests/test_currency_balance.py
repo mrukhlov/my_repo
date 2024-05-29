@@ -3,7 +3,12 @@ from fastapi import FastAPI, status
 from httpx import AsyncClient
 
 from test_task.db.dao.currency_balance_dao import CurrencyBalanceDAO
-from test_task.db.models.models import Character, CurrencyBalance, CurrencyType
+from test_task.db.models.models import (
+    Character,
+    CurrencyBalance,
+    CurrencyType,
+    Transaction,
+)
 
 
 @pytest.mark.anyio
@@ -140,6 +145,13 @@ async def test_top_up_currency_balance_existing_balance(
 
     assert currency_balance[0].balance == create_currency_balance.balance + 500
 
+    transaction = await Transaction.filter(
+        character_to_id=create_character.id,
+    )
+    transaction_obj = transaction[0]
+    assert len(transaction) == 1
+    assert transaction_obj.amount == 500
+
 
 @pytest.mark.anyio
 async def test_top_up_currency_balance_new_balance(
@@ -166,3 +178,10 @@ async def test_top_up_currency_balance_new_balance(
     )
 
     assert currency_balance[0].balance == 1000
+
+    transaction = await Transaction.filter(
+        character_to_id=create_character.id,
+    )
+    transaction_obj = transaction[0]
+    assert len(transaction) == 1
+    assert transaction_obj.amount == 1000

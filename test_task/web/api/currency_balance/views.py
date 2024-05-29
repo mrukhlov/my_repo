@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from fastapi.param_functions import Depends
 
 from test_task.db.dao.currency_balance_dao import CurrencyBalanceDAO
-from test_task.db.models.models import CurrencyBalance
+from test_task.db.models.models import CurrencyBalance, Transaction
 from test_task.web.api.currency_balance.schema import (
     CurrencyBalanceModelDTO,
     CurrencyBalanceModelInputDTO,
@@ -135,5 +135,12 @@ async def top_up_currency_balance(
             currency_type_id=top_up_object.currency_type_id,
             balance=top_up_object.amount,
         )
+
+    await Transaction.create(
+        transaction_type="in",
+        amount=top_up_object.amount,
+        currency_type_id=top_up_object.currency_type_id,
+        character_to_id=top_up_object.character_id,
+    )
 
     return CurrencyBalanceModelDTO.model_validate(currency_balance_object)

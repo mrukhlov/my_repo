@@ -154,8 +154,6 @@ class CurrencyBalance(Model, TimestampMixin):
     )
     balance = fields.FloatField(default=0)
 
-    transactions: fields.ReverseRelation["Transaction"]
-
     class Meta:
         table = "currency_balances"
         orm_mode = True
@@ -171,6 +169,7 @@ class Transaction(Model, TimestampMixin):
     item: fields.ForeignKeyRelation[Equipment] = fields.ForeignKeyField(
         "models.Equipment",
         related_name="transactions",
+        null=True,
     )
     currency_type: fields.ForeignKeyRelation[CurrencyType] = fields.ForeignKeyField(
         "models.CurrencyType",
@@ -180,6 +179,7 @@ class Transaction(Model, TimestampMixin):
     character_from: fields.ForeignKeyRelation[Character] = fields.ForeignKeyField(
         "models.Character",
         related_name="transactions_from",
+        null=True,
     )
     character_to: fields.ForeignKeyRelation[Character] = fields.ForeignKeyField(
         "models.Character",
