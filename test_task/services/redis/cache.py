@@ -3,6 +3,7 @@ import functools
 import json
 from typing import Any, Callable, Optional
 
+from loguru import logger
 from redis.asyncio import Redis, RedisError
 
 from test_task.settings import settings
@@ -46,6 +47,7 @@ class Cache:  # noqa: WPS338
         attempt = 0
         while attempt < retries:
             try:
+                logger.info("Retrying to put into cache.")
                 return await coro(*args, **kwargs)
             except RedisError:
                 attempt += 1
@@ -61,9 +63,12 @@ class Cache:  # noqa: WPS338
         :return: cached data or nothing.
         """
         cache_key = self._generate_cache_key(key)
+        logger.info(f"Getting from cache {cache_key}.")
         try:
             return await self._with_backoff(self.redis.get, cache_key)
-        except RedisError:
+        except RedisError as err:
+            logger.error("Cache error")
+            logger.error(err)
             return None
 
     async def set(  # noqa: WPS324
@@ -81,9 +86,12 @@ class Cache:  # noqa: WPS338
         :return: nothing.
         """
         cache_key = self._generate_cache_key(key)
+        logger.info(f"Setting {cache_key} into cache.")
         try:
             await self._with_backoff(self.redis.set, cache_key, value, ex=expire)
-        except RedisError:
+        except RedisError as err:
+            logger.error("Cache error")
+            logger.error(err)
             return None
 
     async def delete(self, key: str) -> None:  # noqa: WPS324
@@ -94,9 +102,12 @@ class Cache:  # noqa: WPS338
         :return: nothing.
         """
         cache_key = self._generate_cache_key(key)
+        logger.info(f"Deleting {cache_key} from cache.")
         try:
             await self._with_backoff(self.redis.delete, cache_key)
-        except RedisError:
+        except RedisError as err:
+            logger.error("Cache error")
+            logger.error(err)
             return None
 
     async def flush(self) -> None:  # noqa: WPS324
@@ -106,8 +117,11 @@ class Cache:  # noqa: WPS338
         :return: nothing.
         """
         try:
+            logger.info("Flushing cache.")
             await self._with_backoff(self.redis.flushdb)
-        except RedisError:
+        except RedisError as err:
+            logger.error("Cache error")
+            logger.error(err)
             return None
 
 
@@ -153,9 +167,12 @@ def cacheable(  # noqa: C901
                         ]
                     else:
                         cached_data = dto_model(**cached_data)  # type: ignore
+                    logger.info("Retrieved data from cache")
+                    logger.info(cached_data)
                     return cached_data
-            except RedisError:
-                return None
+            except RedisError as err:
+                logger.error("Cache error")
+                logger.error(err)
 
             result = await func(*args, **kwargs)
             try:
@@ -165,10 +182,14 @@ def cacheable(  # noqa: C901
                     )
                 else:
                     data = dto_model.model_validate(result).json()
+                logger.info("Failed to retrieve data from cache")
+                logger.info("Putting into cache")
+                logger.info(cached_data)
                 await cache.set(cache_key, data, expire=expire)
                 return result
-            except RedisError:
-                return None
+            except RedisError as error:
+                logger.error("Cache error")
+                logger.error(error)
 
         return wrapper
 

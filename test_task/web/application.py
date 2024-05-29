@@ -5,6 +5,7 @@ from fastapi.responses import UJSONResponse
 from tortoise.contrib.fastapi import register_tortoise
 
 from test_task.db.config import TORTOISE_CONFIG
+from test_task.logging.logging import configure_logging
 from test_task.web.api.router import api_router
 from test_task.web.lifetime import register_shutdown_event, register_startup_event
 
@@ -17,6 +18,7 @@ def get_app() -> FastAPI:
 
     :return: application.
     """
+    configure_logging()
     app = FastAPI(
         title="test_task",
         version=metadata.version("test_task"),

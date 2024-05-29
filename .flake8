@@ -88,6 +88,8 @@ ignore =
   WPS212,
   ; Found too deep nesting.
   WPS220,
+  ; Found too many expressions.
+  WPS213,
 
 per-file-ignores =
   ; all tests
