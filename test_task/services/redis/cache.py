@@ -160,12 +160,12 @@ def cacheable(  # noqa: C901
             result = await func(*args, **kwargs)
             try:
                 if isinstance(result, list):
-                    result = json.dumps(
+                    data = json.dumps(
                         [dto_model.model_validate(obj).json() for obj in result],
                     )
                 else:
-                    result = dto_model.model_validate(result).json()
-                await cache.set(cache_key, result, expire=expire)
+                    data = dto_model.model_validate(result).json()
+                await cache.set(cache_key, data, expire=expire)
                 return result
             except RedisError:
                 return None
