@@ -214,3 +214,39 @@ async def transfer_item(
             character_from_id=transfer_object.character_from,
             character_to_id=transfer_object.character_to,
         )
+
+
+@router.post("/drop_item/")
+async def drop_item(
+    drop_object: EquipmentModelInputDTO,
+    equipment_dao: EquipmentDAO = Depends(),
+) -> EquipmentModelDTO:
+    """
+    Transfers equipment item from one character to another.
+
+    :param drop_object: data for transfer.
+    :param equipment_dao: DAO for equipment models.
+    :return: equipment object from database.
+    """
+    item_to = await equipment_dao.filter_equipment(
+        name=drop_object.name,
+        character_id=drop_object.character_id,
+    )
+
+    if item_to:
+        item_to_object = item_to[0]
+        item_to_object.quantity += 1
+        await item_to_object.save()
+    else:
+        item_to_object = await equipment_dao.create_equipment(
+            name=drop_object.name,
+            eq_type=drop_object.type,
+            character_id=drop_object.character_id,
+            power=drop_object.power,
+            eq_slot=drop_object.slot,
+            equipped=drop_object.equipped,
+            price=drop_object.price,
+            currency_type_id=drop_object.currency_type_id,
+        )
+
+    return EquipmentModelDTO.model_validate(item_to_object)

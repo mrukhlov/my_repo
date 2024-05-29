@@ -17,6 +17,7 @@ class EquipmentModelDTO(BaseModel):
     equipped: bool
     price: float
     currency_type_id: int
+    quantity: int
     model_config = ConfigDict(from_attributes=True)
 
 

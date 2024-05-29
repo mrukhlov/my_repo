@@ -411,3 +411,65 @@ async def test_transfer_item_not_owned_by_character(
     response_transfer = await client.post(url_transfer, json=transfer_data)
     assert response_transfer.status_code == status.HTTP_400_BAD_REQUEST
     assert "Character doesn't have this item." in response_transfer.json()["detail"]
+
+
+@pytest.mark.anyio
+async def test_drop_existing_item(
+    fastapi_app: FastAPI,
+    client: AsyncClient,
+    create_character: Character,
+    create_currency_type: CurrencyType,
+    create_equipment: Equipment,
+) -> None:
+    """Tests dropping an existing item."""
+    # First drop the item to ensure it exists
+    url = fastapi_app.url_path_for("drop_item")
+    drop_data = {
+        "name": create_equipment.name,
+        "type": create_equipment.type,
+        "character_id": create_character.id,
+        "power": create_equipment.power,
+        "slot": create_equipment.slot.value,
+        "equipped": create_equipment.equipped,
+        "price": create_equipment.price,
+        "currency_type_id": create_currency_type.id,
+    }
+
+    response = await client.post(url, json=drop_data)
+    assert response.status_code == status.HTTP_200_OK
+
+    dropped_item = response.json()
+    assert dropped_item["quantity"] == create_equipment.quantity + 1
+
+
+@pytest.mark.anyio
+async def test_drop_new_item(
+    fastapi_app: FastAPI,
+    client: AsyncClient,
+    create_character: Character,
+    create_currency_type: CurrencyType,
+) -> None:
+    """Tests dropping a new item."""
+    url = fastapi_app.url_path_for("drop_item")
+    drop_data = {
+        "name": "New Sword",
+        "type": "weapon",
+        "character_id": create_character.id,
+        "power": 50,
+        "slot": "weapon",
+        "equipped": False,
+        "price": 100.0,
+        "currency_type_id": create_currency_type.id,
+    }
+
+    response = await client.post(url, json=drop_data)
+    assert response.status_code == status.HTTP_200_OK
+    dropped_item = response.json()
+    assert dropped_item["name"] == "New Sword"
+    assert dropped_item["type"] == "weapon"
+    assert dropped_item["character_id"] == create_character.id
+    assert dropped_item["power"] == 50
+    assert dropped_item["slot"] == "weapon"
+    assert not dropped_item["equipped"]
+    assert dropped_item["price"] == 100.0  # noqa: WPS459
+    assert dropped_item["currency_type_id"] == create_currency_type.id
