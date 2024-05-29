@@ -185,3 +185,47 @@ async def test_top_up_currency_balance_new_balance(
     transaction_obj = transaction[0]
     assert len(transaction) == 1
     assert transaction_obj.amount == 1000
+
+
+@pytest.mark.anyio
+async def test_check_balance_history_existing_balance(
+    fastapi_app: FastAPI,
+    client: AsyncClient,
+    create_character: Character,
+    create_currency_type: CurrencyType,
+    create_currency_balance: CurrencyBalance,
+    create_transaction: Transaction,
+) -> None:
+    """Tests checking balance history for an existing balance."""
+    url = fastapi_app.url_path_for(
+        "check_balance_history",
+        currency_balance_id=create_currency_balance.id,
+        currency_type_id=create_currency_type.id,
+    )
+
+    response = await client.get(url)
+    assert response.status_code == status.HTTP_200_OK
+
+    balance_history = response.json()
+    assert len(balance_history) == 1
+    assert balance_history[0]["character_to"]["id"] == create_character.id
+    assert balance_history[0]["amount"] == create_transaction.amount
+
+
+@pytest.mark.anyio
+async def test_check_balance_history_non_existing_balance(  # noqa: WPS118
+    fastapi_app: FastAPI,
+    client: AsyncClient,
+    create_character: Character,
+    create_currency_type: CurrencyType,
+) -> None:
+    """Tests checking balance history for a non-existing balance."""
+    non_existing_balance_id = 9999
+    url = fastapi_app.url_path_for(
+        "check_balance_history",
+        currency_balance_id=non_existing_balance_id,
+        currency_type_id=create_currency_type.id,
+    )
+
+    response = await client.get(url)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST

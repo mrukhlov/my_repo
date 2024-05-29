@@ -1,7 +1,7 @@
 from typing import List
 
-from fastapi import APIRouter
-from fastapi.param_functions import Depends
+from fastapi import APIRouter, Depends, HTTPException, status
+from tortoise.expressions import Q  # noqa: WPS347
 
 from test_task.db.dao.currency_balance_dao import CurrencyBalanceDAO
 from test_task.db.models.models import CurrencyBalance, Transaction
@@ -9,6 +9,7 @@ from test_task.web.api.currency_balance.schema import (
     CurrencyBalanceModelDTO,
     CurrencyBalanceModelInputDTO,
 )
+from test_task.web.api.transaction.schema import TransactionModelDTO
 
 router = APIRouter()
 
@@ -144,3 +145,51 @@ async def top_up_currency_balance(
     )
 
     return CurrencyBalanceModelDTO.model_validate(currency_balance_object)
+
+
+@router.get(
+    "/check_balance_history/{currency_balance_id}/{currency_type_id}/",
+    response_model=List[TransactionModelDTO],
+)
+async def check_balance_history(
+    currency_balance_id: int,
+    currency_type_id: int,
+    currency_balance_dao: CurrencyBalanceDAO = Depends(),
+) -> List[Transaction]:
+    """
+    Retrieve currency balance transactions history from the database.
+
+    :param currency_balance_id: currency_balance_id.
+    :param currency_type_id: currency_type_id.
+    :param currency_balance_dao: DAO for currency_balance models.
+    :raises HTTPException: HTTPException
+    :return: transaction object from database.
+    """
+    currency_balance = await currency_balance_dao.filter_currency_balances(
+        currency_balance_id=currency_balance_id,
+        currency_type=currency_type_id,
+    )
+    if not currency_balance:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str("Balance does not exist."),
+        )
+
+    currency_balance_obj = currency_balance[0]
+    await currency_balance_obj.fetch_related("character")
+
+    return await Transaction.filter(
+        (
+            Q(
+                character_from_id=currency_balance_obj.character.id,
+            )
+            | Q(
+                character_to_id=currency_balance_obj.character.id,
+            )
+        ),
+    ).prefetch_related(
+        "character_from",
+        "character_to",
+        "item",
+        "currency_type",
+    )

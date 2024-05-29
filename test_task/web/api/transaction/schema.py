@@ -15,7 +15,7 @@ class TransactionModelDTO(BaseModel):
     """
 
     id: int
-    character_from: CharacterModelDTO
+    character_from: Optional[CharacterModelDTO]
     character_to: CharacterModelDTO
     item: Optional[EquipmentModelDTO]
     amount: Optional[int]

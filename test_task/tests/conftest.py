@@ -12,6 +12,7 @@ from test_task.db.models.models import (
     Equipment,
     Inventory,
     Role,
+    Transaction,
     User,
 )
 from test_task.services.auth.auth import create_access_token
@@ -205,6 +206,26 @@ async def create_currency_balance(
     )
     yield currency_balance
     await currency_balance.delete()
+
+
+@pytest.fixture
+async def create_transaction(
+    create_character: Character,
+    create_currency_type: CurrencyType,
+) -> AsyncGenerator[Transaction, None]:
+    """
+    Create a transaction for testing purposes.
+
+    :yield: transaction
+    """
+    transaction = await Transaction.create(
+        transaction_type="in",
+        amount=1000,
+        currency_type_id=create_currency_type.id,
+        character_to_id=create_character.id,
+    )
+    yield transaction
+    await transaction.delete()
 
 
 @pytest.fixture
