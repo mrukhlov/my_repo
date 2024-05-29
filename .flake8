@@ -90,6 +90,8 @@ ignore =
   WPS220,
   ; Found too many expressions.
   WPS213,
+  ; Found too many `assert` statements.
+  WPS218,
 
 per-file-ignores =
   ; all tests

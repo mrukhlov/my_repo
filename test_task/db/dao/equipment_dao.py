@@ -1,5 +1,7 @@
 from typing import List, Optional
 
+from tortoise.exceptions import ValidationError
+
 from test_task.db.models.models import Character, Equipment
 
 
@@ -11,7 +13,9 @@ class EquipmentDAO:
         name: str,
         eq_type: str,
         character_id: int,
+        eq_slot: str,
         power: int = 0,
+        equipped: bool = False,
     ) -> Equipment:
         """
         Add single equipment to the database.
@@ -20,13 +24,26 @@ class EquipmentDAO:
         :param eq_type: type of the equipment (e.g., "armor", "weapon").
         :param character_id: ID of the character who owns the equipment.
         :param power: power of the equipment.
+        :param eq_slot: eq_slot of the equipment.
+        :param equipped: equipped flag of the equipment.
         :return: equipment instance
         """
+        if equipped:
+            existing_equipped = await Equipment.filter(
+                character_id=character_id,
+                slot=eq_slot,
+                equipped=True,
+            ).exists()
+            if existing_equipped:
+                equipped = False
+
         equipment = await Equipment.create(
             name=name,
             type=eq_type,
             character_id=character_id,
             power=power,
+            slot=eq_slot,
+            equipped=equipped,
         )
         await equipment.fetch_related("character")
         return equipment
@@ -83,6 +100,8 @@ class EquipmentDAO:
         eq_type: Optional[str] = None,
         character_id: Optional[int] = None,
         power: Optional[int] = None,
+        eq_slot: Optional[str] = None,
+        equipped: Optional[bool] = None,
     ) -> Optional[Equipment]:
         """
         Edit an existing equipment's details.
@@ -92,6 +111,9 @@ class EquipmentDAO:
         :param eq_type: new type of the equipment (optional).
         :param character_id: new ID of the character who owns the equipment (optional).
         :param power: new power of the equipment (optional).
+        :param eq_slot: slot of the equipment.
+        :param equipped: equipped flag of the equipment.
+        :raises ValidationError: HTTPException
         :return: updated equipment instance or None if equipment not found.
         """
         equipment = await self.get_equipment_by_id(equipment_id)
@@ -111,6 +133,24 @@ class EquipmentDAO:
                 equipment.character = character  # type: ignore
         if power is not None:
             equipment.power = power
+        if eq_slot is not None:
+            equipment.slot = eq_slot  # type: ignore
+        if equipped is not None:
+            if equipped:
+                existing_equipped = (
+                    await Equipment.filter(
+                        character=equipment.character,
+                        slot=equipment.slot,
+                        equipped=True,
+                    )
+                    .exclude(id=equipment.id)
+                    .exists()
+                )
+                if existing_equipped:
+                    raise ValidationError(
+                        f"Character already has an equipped {equipment.slot} item.",
+                    )
+            equipment.equipped = equipped
 
         await equipment.save()
         return equipment

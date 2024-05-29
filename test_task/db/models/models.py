@@ -1,7 +1,18 @@
+from enum import Enum
+
 from tortoise import fields
 from tortoise.models import Model
 
 from test_task.db.mixins import TimestampMixin
+
+
+class EquipmentSlot(Enum):
+    """EquipmentSlot enum."""
+
+    CHEST = "chest"
+    HEAD = "head"
+    SHOES = "shoes"
+    WEAPON = "weapon"
 
 
 class Role(Model, TimestampMixin):
@@ -69,12 +80,16 @@ class Equipment(Model, TimestampMixin):
 
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=255)
-    type = fields.CharField(max_length=50)  # e.g., "armor", "weapon"
+    type = fields.CharField(max_length=50)
     character: fields.ForeignKeyRelation[Character] = fields.ForeignKeyField(
         "models.Character",
         related_name="equipment",
     )
     power = fields.IntField(default=0)
+    slot = fields.CharEnumField(EquipmentSlot)
+    equipped = fields.BooleanField(
+        default=False,
+    )
 
     transactions: fields.ReverseRelation["Transaction"]
 
@@ -104,7 +119,7 @@ class CurrencyType(Model, TimestampMixin):
     """Currency type model."""
 
     id = fields.IntField(pk=True)
-    name = fields.CharField(max_length=50, unique=True)  # e.g., "gold", "gems"
+    name = fields.CharField(max_length=50, unique=True)
     description = fields.TextField(null=True, blank=True)
 
     transactions: fields.ReverseRelation["Transaction"]
@@ -140,7 +155,7 @@ class Transaction(Model, TimestampMixin):
     """Transaction model."""
 
     id = fields.IntField(pk=True)
-    transaction_type = fields.CharField(max_length=50)  # e.g., "purchase", "sale"
+    transaction_type = fields.CharField(max_length=50)
     amount = fields.IntField()
     item: fields.ForeignKeyRelation[Equipment] = fields.ForeignKeyField(
         "models.Equipment",
@@ -174,7 +189,7 @@ class Inventory(Model, TimestampMixin):
         related_name="inventory",
     )
     item_name = fields.CharField(max_length=255)
-    item_type = fields.CharField(max_length=50)  # e.g., "potion", "scroll"
+    item_type = fields.CharField(max_length=50)
     quantity = fields.IntField(default=1)
 
     class Meta:

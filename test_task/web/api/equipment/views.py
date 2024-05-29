@@ -1,7 +1,7 @@
 from typing import List
 
-from fastapi import APIRouter
-from fastapi.param_functions import Depends
+from fastapi import APIRouter, Depends, HTTPException, status
+from tortoise.exceptions import ValidationError
 
 from test_task.db.dao.equipment_dao import EquipmentDAO
 from test_task.db.models.models import Equipment
@@ -50,40 +50,56 @@ async def edit_equipment_model(
     equipment_id: int,
     new_equipment_object: EquipmentModelInputDTO,
     equipment_dao: EquipmentDAO = Depends(),
-) -> None:
+) -> EquipmentModelDTO:
     """
     Edits equipment model in the database.
 
     :param equipment_id: equipment_id.
     :param new_equipment_object: new equipment model item.
     :param equipment_dao: DAO for equipment models.
+    :raises HTTPException: HTTPException
+    :return: equipment object from database.
     """
-    await equipment_dao.edit_equipment(
-        equipment_id=equipment_id,
-        name=new_equipment_object.name,
-        eq_type=new_equipment_object.type,
-        character_id=new_equipment_object.character_id,
-        power=new_equipment_object.power,
-    )
+    try:
+        equipment = await equipment_dao.edit_equipment(
+            equipment_id=equipment_id,
+            name=new_equipment_object.name,
+            eq_type=new_equipment_object.type,
+            character_id=new_equipment_object.character_id,
+            power=new_equipment_object.power,
+            eq_slot=new_equipment_object.slot,
+            equipped=new_equipment_object.equipped,
+        )
+    except ValidationError as err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(err),
+        )
+    return EquipmentModelDTO.model_validate(equipment)
 
 
 @router.post("/")
 async def create_equipment_model(
     new_equipment_object: EquipmentModelInputDTO,
     equipment_dao: EquipmentDAO = Depends(),
-) -> None:
+) -> EquipmentModelDTO:
     """
     Creates equipment model in the database.
 
     :param new_equipment_object: new equipment model item.
     :param equipment_dao: DAO for equipment models.
+    :return: equipment object from database.
     """
-    await equipment_dao.create_equipment(
+    equipment = await equipment_dao.create_equipment(
         name=new_equipment_object.name,
         eq_type=new_equipment_object.type,
         character_id=new_equipment_object.character_id,
         power=new_equipment_object.power,
+        eq_slot=new_equipment_object.slot,
+        equipped=new_equipment_object.equipped,
     )
+
+    return EquipmentModelDTO.model_validate(equipment)
 
 
 @router.delete("/{equipment_id}/")

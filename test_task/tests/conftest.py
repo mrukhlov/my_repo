@@ -144,6 +144,8 @@ async def create_equipment(
         type="weapon",
         character=create_character,
         power=10,
+        slot="weapon",
+        equipped=False,
     )
     yield equipment
     await equipment.delete()

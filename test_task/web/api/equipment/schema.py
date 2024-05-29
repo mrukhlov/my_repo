@@ -13,6 +13,8 @@ class EquipmentModelDTO(BaseModel):
     type: str
     character_id: int
     power: int
+    slot: str
+    equipped: bool
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -23,3 +25,5 @@ class EquipmentModelInputDTO(BaseModel):
     type: str
     character_id: int
     power: int = 0
+    slot: str
+    equipped: bool = False
