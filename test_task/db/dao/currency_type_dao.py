@@ -10,14 +10,18 @@ class CurrencyTypeDAO:
         self,
         name: str,
         description: Optional[str] = None,
-    ) -> None:
+    ) -> CurrencyType:
         """
         Add single currency type to the database.
 
         :param name: name of the currency type.
         :param description: description of the currency type.
+        :return: currency_type object.
         """
-        await CurrencyType.create(name=name, description=description)
+        return await CurrencyType.create(
+            name=name,
+            description=description,
+        )
 
     async def get_currency_type_by_id(self, type_id: int) -> Optional[CurrencyType]:
         """

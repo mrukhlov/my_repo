@@ -2,9 +2,13 @@ from typing import List
 
 from fastapi import APIRouter
 from fastapi.param_functions import Depends
+from redis.asyncio import Redis
 
 from test_task.db.dao.currency_type_dao import CurrencyTypeDAO
 from test_task.db.models.models import CurrencyType
+from test_task.services.redis.cache import Cache, cacheable
+from test_task.services.redis.dependency import get_redis_pool
+from test_task.settings import settings
 from test_task.web.api.currency_type.schema import (
     CurrencyTypeModelDTO,
     CurrencyTypeModelInputDTO,
@@ -14,10 +18,12 @@ router = APIRouter()
 
 
 @router.get("/", response_model=List[CurrencyTypeModelDTO])
+@cacheable(key_prefix="type_models", dto_model=CurrencyTypeModelDTO)
 async def get_currency_type_models(
     limit: int = 10,
     offset: int = 0,
     currency_type_dao: CurrencyTypeDAO = Depends(),
+    redis_pool: Redis = Depends(get_redis_pool),
 ) -> List[CurrencyType]:
     """
     Retrieve all currency_type objects from the database.
@@ -25,21 +31,25 @@ async def get_currency_type_models(
     :param limit: limit of currency_type objects, defaults to 10.
     :param offset: offset of currency_type objects, defaults to 0.
     :param currency_type_dao: DAO for currency_type models.
+    :param redis_pool: redis pool dependency.
     :return: list of currency_type objects from database.
     """
     return await currency_type_dao.get_all_currency_types(limit=limit, offset=offset)
 
 
 @router.get("/{currency_type_id}/", response_model=CurrencyTypeModelDTO)
+@cacheable(key_prefix="type_model", dto_model=CurrencyTypeModelDTO)
 async def get_currency_type_model(
     currency_type_id: int,
     currency_type_dao: CurrencyTypeDAO = Depends(),
+    redis_pool: Redis = Depends(get_redis_pool),
 ) -> CurrencyTypeModelDTO:
     """
     Retrieve currency_type object from the database.
 
     :param currency_type_id: currency_type_id.
     :param currency_type_dao: DAO for currency_type models.
+    :param redis_pool: redis pool dependency.
     :return: currency_type object from database.
     """
     currency_type = await currency_type_dao.get_currency_type_by_id(
@@ -68,21 +78,31 @@ async def edit_currency_type_model(
     )
 
 
-@router.post("/")
+@router.post("/", response_model=CurrencyTypeModelDTO)
 async def create_currency_type_model(
     new_currency_type_object: CurrencyTypeModelInputDTO,
     currency_type_dao: CurrencyTypeDAO = Depends(),
-) -> None:
+    redis_pool: Redis = Depends(get_redis_pool),
+) -> CurrencyTypeModelInputDTO:
     """
     Creates currency_type model in the database.
 
     :param new_currency_type_object: new currency_type model item.
     :param currency_type_dao: DAO for currency_type models.
+    :param redis_pool: redis pool dependency.
+    :return: currency_type object from database.
     """
-    await currency_type_dao.create_currency_type(
+    currency_type = await currency_type_dao.create_currency_type(
         name=new_currency_type_object.name,
         description=new_currency_type_object.description,
     )
+    cache = Cache(redis_pool)
+    await cache.set(
+        f"type_model_{currency_type.id}",
+        currency_type,
+        expire=settings.cache_ttl,
+    )
+    return CurrencyTypeModelInputDTO.model_validate(currency_type)
 
 
 @router.delete("/{currency_type_id}/")

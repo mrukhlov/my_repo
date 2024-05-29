@@ -71,6 +71,10 @@ class Settings(BaseSettings):
     jwt_secret_key: str = "JWT_SECRET_KEY"
     jwt_refresh_secret_key: str = "JWT_REFRESH_SECRET_KEY"
 
+    # Cache
+    cache_prefix: str = "cache"
+    cache_ttl: int = 3600
+
     @property
     def db_url(self) -> URL:
         """

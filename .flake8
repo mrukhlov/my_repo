@@ -76,8 +76,18 @@ ignore =
   S106,
   ; Found magic number.
   WPS432,
-  ; Possible hardcoded password:.
+  ; Possible hardcoded password.
   S105,
+  ; Found too many arguments.
+  WPS211,
+  ; Found function with too much cognitive complexity.
+  WPS231,
+  ; Found too many local variables.
+  WPS210,
+  ; Found too many return statements.
+  WPS212,
+  ; Found too deep nesting.
+  WPS220,
 
 per-file-ignores =
   ; all tests
