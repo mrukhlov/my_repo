@@ -4,7 +4,7 @@ services:
   api:
     ports:
       # Exposes application port.
-    - "8000:8000"
+    - "8015:8015"
     build:
       target: dev
     volumes:
@@ -13,13 +13,3 @@ services:
     environment:
       # Enables autoreload.
       TEST_TASK_RELOAD: "True"
-
-  taskiq-worker:
-    volumes:
-      # Adds current directory as volume.
-    - .:/app/src/
-    command:
-    - taskiq
-    - worker
-    - test_task.tkq:broker
-    - --reload

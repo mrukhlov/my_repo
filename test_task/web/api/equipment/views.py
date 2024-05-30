@@ -1,5 +1,7 @@
 from typing import List
 
+from aio_pika import Channel, Message
+from aio_pika.pool import Pool
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from tortoise.exceptions import ValidationError
 from tortoise.transactions import in_transaction
@@ -11,9 +13,11 @@ from test_task.db.models.models import (
     Equipment,
     Transaction,
 )
+from test_task.services.rabbit.dependencies import get_rmq_channel_pool
 from test_task.web.api.equipment.schema import (
     EquipmentModelDTO,
     EquipmentModelInputDTO,
+    EquipmentRMQMessageDTO,
     TransferEquipmentInputDTO,
 )
 from test_task.web.utils import send_email
@@ -131,6 +135,60 @@ async def delete_equipment_model(
     equipment = await equipment_dao.get_equipment_by_id(equipment_id)
     if equipment:
         await equipment.delete()
+
+
+@router.post("/equip_item/")
+async def equip_item(
+    equip_object: EquipmentRMQMessageDTO,
+    pool: Pool[Channel] = Depends(get_rmq_channel_pool),
+) -> None:
+    """
+    Equips equipment item to charcter.
+
+    :param equip_object: data for equip.
+    :param pool: rmq pool.
+    """
+    async with pool.acquire() as conn:
+        exchange = await conn.declare_exchange(
+            name=equip_object.exchange_name,
+            auto_delete=True,
+        )
+        message_data = f"equip_{equip_object.character_id}_{equip_object.item_id}"
+        await exchange.publish(
+            message=Message(
+                body=message_data.encode("utf-8"),
+                content_encoding="utf-8",
+                content_type="text/plain",
+            ),
+            routing_key=equip_object.routing_key,
+        )
+
+
+@router.post("/equip_drop_item/")
+async def equip_drop_item(
+    equip_object: EquipmentRMQMessageDTO,
+    pool: Pool[Channel] = Depends(get_rmq_channel_pool),
+) -> None:
+    """
+    Drops equipped item to charcter.
+
+    :param equip_object: data for equip.
+    :param pool: rmq pool.
+    """
+    async with pool.acquire() as conn:
+        exchange = await conn.declare_exchange(
+            name=equip_object.exchange_name,
+            auto_delete=True,
+        )
+        message_data = f"drop_{equip_object.character_id}_{equip_object.item_id}"
+        await exchange.publish(
+            message=Message(
+                body=message_data.encode("utf-8"),
+                content_encoding="utf-8",
+                content_type="text/plain",
+            ),
+            routing_key=equip_object.routing_key,
+        )
 
 
 @router.post("/transfer_item/")

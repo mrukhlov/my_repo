@@ -1,0 +1,578 @@
+{
+	"info": {
+		"_postman_id": "6242cdcb-d514-47ce-a062-8d3b67a23fb4",
+		"name": "test_task",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1009138"
+	},
+	"item": [
+		{
+			"name": "currency_type",
+			"item": [
+				{
+					"name": "currency_types",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/api/currency_type/",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"currency_type",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "currency_type",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/api/currency_type/1",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"currency_type",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "auth",
+			"item": [
+				{
+					"name": "register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"aaa@aaa.com\",\n    \"password\": \"aaa\",\n    \"username\": \"aaa\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/api/auth/register/",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable(\"access\", jsonData.access_token);",
+									"postman.setEnvironmentVariable(\"refresh\", jsonData.refresh_token);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"aaa@aaa.com\",\n    \"password\": \"aaa\",\n    \"username\": \"aaa\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/api/auth/login",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "refresh",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"postman.setEnvironmentVariable(\"access\", jsonData.access_token);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh_token\": {{access}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/api/auth/refresh?refresh_token={{refresh}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"refresh"
+							],
+							"query": [
+								{
+									"key": "refresh_token",
+									"value": "{{refresh}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get me",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/api/auth/me",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"me"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "character",
+			"item": [
+				{
+					"name": "character",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/api/character/1",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"character",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "characters",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/api/character/",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"character",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "equipment",
+			"item": [
+				{
+					"name": "equipment",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/api/equipment/1",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"equipment",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "equip item",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"exchange_name\":\"equipment\",\n    \"routing_key\":\"equip\",\n    \"character_id\":1,\n    \"item_id\":1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/api/equipment/equip_item/",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"equipment",
+								"equip_item",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "equip item drop",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"exchange_name\":\"equipment\",\n    \"routing_key\":\"equip\",\n    \"character_id\":1,\n    \"item_id\":1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/api/equipment/equip_drop_item/",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"equipment",
+								"equip_drop_item",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "drop item",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Sword of Destiny\",\n    \"type\": \"Weapon\",\n    \"character_id\": 1,\n    \"power\": 150,\n    \"slot\": \"weapon\",\n    \"equipped\": true,\n    \"price\": 250.0,\n    \"currency_type_id\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/api/equipment/drop_item/",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"equipment",
+								"drop_item",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "transfer item",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"item_id\":1,\n    \"character_from\":1,\n    \"character_to\":2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/api/equipment/transfer_item/",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"equipment",
+								"transfer_item",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "equipments",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/api/equipment/",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"equipment",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "currency balance",
+			"item": [
+				{
+					"name": "top up currency balance",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"character_id\": 1,\n    \"currency_type_id\": 1,\n    \"amount\": 500.0\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/api/currency_balance/top_up_currency_balance/",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"currency_balance",
+								"top_up_currency_balance",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "check balance history",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"character_id\": 1,\n    \"currency_type_id\": 1,\n    \"amount\": 500.0\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/api/currency_balance/check_balance_history/1/1/",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"api",
+								"currency_balance",
+								"check_balance_history",
+								"1",
+								"1",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

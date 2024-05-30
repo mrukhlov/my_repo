@@ -40,3 +40,12 @@ class TransferEquipmentInputDTO(BaseModel):
     character_from: int
     character_to: int
     item_id: int
+
+
+class EquipmentRMQMessageDTO(BaseModel):
+    """DTO for publishing message in RabbitMQ."""
+
+    exchange_name: str
+    routing_key: str
+    character_id: int
+    item_id: int

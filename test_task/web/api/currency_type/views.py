@@ -6,9 +6,8 @@ from redis.asyncio import Redis
 
 from test_task.db.dao.currency_type_dao import CurrencyTypeDAO
 from test_task.db.models.models import CurrencyType
-from test_task.services.redis.cache import Cache, cacheable
+from test_task.services.redis.cache import cacheable
 from test_task.services.redis.dependency import get_redis_pool
-from test_task.settings import settings
 from test_task.web.api.currency_type.schema import (
     CurrencyTypeModelDTO,
     CurrencyTypeModelInputDTO,
@@ -83,7 +82,7 @@ async def create_currency_type_model(
     new_currency_type_object: CurrencyTypeModelInputDTO,
     currency_type_dao: CurrencyTypeDAO = Depends(),
     redis_pool: Redis = Depends(get_redis_pool),
-) -> CurrencyTypeModelInputDTO:
+) -> CurrencyTypeModelDTO:
     """
     Creates currency_type model in the database.
 
@@ -96,13 +95,7 @@ async def create_currency_type_model(
         name=new_currency_type_object.name,
         description=new_currency_type_object.description,
     )
-    cache = Cache(redis_pool)
-    await cache.set(
-        f"type_model_{currency_type.id}",
-        currency_type,
-        expire=settings.cache_ttl,
-    )
-    return CurrencyTypeModelInputDTO.model_validate(currency_type)
+    return CurrencyTypeModelDTO.model_validate(currency_type)
 
 
 @router.delete("/{currency_type_id}/")

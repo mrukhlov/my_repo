@@ -4,7 +4,6 @@ from fastapi import FastAPI
 
 from test_task.services.rabbit.lifetime import init_rabbit, shutdown_rabbit
 from test_task.services.redis.lifetime import init_redis, shutdown_redis
-from test_task.tkq import broker
 
 
 def register_startup_event(
@@ -23,8 +22,6 @@ def register_startup_event(
     @app.on_event("startup")
     async def _startup() -> None:  # noqa: WPS430
         app.middleware_stack = None
-        if not broker.is_worker_process:
-            await broker.startup()
         init_redis(app)
         init_rabbit(app)
         app.middleware_stack = app.build_middleware_stack()
@@ -45,8 +42,6 @@ def register_shutdown_event(
 
     @app.on_event("shutdown")
     async def _shutdown() -> None:  # noqa: WPS430
-        if not broker.is_worker_process:
-            await broker.shutdown()
         await shutdown_redis(app)
         await shutdown_rabbit(app)
         pass  # noqa: WPS420
