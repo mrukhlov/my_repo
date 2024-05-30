@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -30,8 +32,8 @@ class UserOutput(BaseModel):
 class Token(BaseModel):
     """Token model."""
 
-    access_token: str | None = None
-    refresh_token: str | None = None
+    access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 

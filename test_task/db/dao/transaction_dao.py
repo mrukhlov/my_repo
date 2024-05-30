@@ -13,7 +13,7 @@ class TransactionDAO:
         currency_type_id: int,
         character_from_id: int,
         character_to_id: int,
-        transaction_type: str | None = None,
+        transaction_type: Optional[str] = None,
     ) -> Transaction:
         """
         Add single transaction to the database.

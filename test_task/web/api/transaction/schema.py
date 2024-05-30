@@ -34,5 +34,5 @@ class TransactionModelInputDTO(BaseModel):
     character_from_id: int
     item_id: int
     amount: int
-    transaction_type: str | None = None
+    transaction_type: Optional[str] = None
     currency_type_id: int
