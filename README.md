@@ -81,7 +81,7 @@ in `test_task.settings.Settings.Config`.
 An example of .env file:
 ```bash
 TEST_TASK_RELOAD="True"
-TEST_TASK_PORT="8000"
+TEST_TASK_PORT="8015"
 TEST_TASK_ENVIRONMENT="dev"
 ```
 
