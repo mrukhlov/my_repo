@@ -13,3 +13,11 @@ services:
     environment:
       # Enables autoreload.
       TEST_TASK_RELOAD: "True"
+
+  rmq:
+    ports:
+    - "15672:15672"
+
+  redis:
+    ports:
+    - "6376:6376"
