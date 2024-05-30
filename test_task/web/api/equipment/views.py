@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from tortoise.exceptions import ValidationError
 from tortoise.transactions import in_transaction
 
@@ -16,6 +16,7 @@ from test_task.web.api.equipment.schema import (
     EquipmentModelInputDTO,
     TransferEquipmentInputDTO,
 )
+from test_task.web.utils import send_email
 
 router = APIRouter()
 
@@ -218,6 +219,7 @@ async def transfer_item(
 
 @router.post("/drop_item/")
 async def drop_item(
+    background_tasks: BackgroundTasks,
     drop_object: EquipmentModelInputDTO,
     equipment_dao: EquipmentDAO = Depends(),
 ) -> EquipmentModelDTO:
@@ -225,6 +227,7 @@ async def drop_item(
     Transfers equipment item from one character to another.
 
     :param drop_object: data for transfer.
+    :param background_tasks: background_tasks.
     :param equipment_dao: DAO for equipment models.
     :return: equipment object from database.
     """
@@ -248,5 +251,18 @@ async def drop_item(
             price=drop_object.price,
             currency_type_id=drop_object.currency_type_id,
         )
+
+    character = (
+        await Character.filter(id=drop_object.character_id)
+        .prefetch_related("user")
+        .first()
+    )
+
+    background_tasks.add_task(
+        send_email,
+        character.user.email,  # type: ignore
+        f"Hello {character.user.username} we have a drop for you.",  # type: ignore # noqa: WPS237, E501
+        f"We've dropped {drop_object.name}, enjoy!",
+    )
 
     return EquipmentModelDTO.model_validate(item_to_object)

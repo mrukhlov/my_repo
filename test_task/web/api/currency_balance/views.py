@@ -1,15 +1,16 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from tortoise.expressions import Q  # noqa: WPS347
 
 from test_task.db.dao.currency_balance_dao import CurrencyBalanceDAO
-from test_task.db.models.models import CurrencyBalance, Transaction
+from test_task.db.models.models import Character, CurrencyBalance, Transaction
 from test_task.web.api.currency_balance.schema import (
     CurrencyBalanceModelDTO,
     CurrencyBalanceModelInputDTO,
 )
 from test_task.web.api.transaction.schema import TransactionModelDTO
+from test_task.web.utils import send_email
 
 router = APIRouter()
 
@@ -112,12 +113,14 @@ async def delete_currency_balance_model(
 @router.post("/top_up_currency_balance/")
 async def top_up_currency_balance(
     top_up_object: CurrencyBalanceModelInputDTO,
+    background_tasks: BackgroundTasks,
     currency_balance_dao: CurrencyBalanceDAO = Depends(),
 ) -> CurrencyBalanceModelDTO:
     """
     Top up currency balance of the character.
 
     :param top_up_object: data for transfer.
+    :param background_tasks: background_tasks.
     :param currency_balance_dao: DAO for currency_balance models.
     :return: currency_balance object from database.
     """
@@ -142,6 +145,19 @@ async def top_up_currency_balance(
         amount=top_up_object.amount,
         currency_type_id=top_up_object.currency_type_id,
         character_to_id=top_up_object.character_id,
+    )
+
+    character = (
+        await Character.filter(id=top_up_object.character_id)
+        .prefetch_related("user")
+        .first()
+    )
+
+    background_tasks.add_task(
+        send_email,
+        character.user.email,  # type: ignore
+        f"Hello {character.user.username} top up balance successful.",  # type: ignore # noqa: WPS237, E501
+        f"Your balance increased by {top_up_object.amount}, enjoy!",
     )
 
     return CurrencyBalanceModelDTO.model_validate(currency_balance_object)
