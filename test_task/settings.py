@@ -56,7 +56,7 @@ class Settings(BaseSettings):
 
     # Variables for RabbitMQ
     rabbit_host: str = "test_task-rmq"
-    rabbit_port: int = 5672
+    rabbit_port: int = 5432
     rabbit_user: str = "guest"
     rabbit_pass: str = "guest"
     rabbit_vhost: str = "/"
