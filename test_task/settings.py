@@ -48,18 +48,20 @@ class Settings(BaseSettings):
     db_echo: bool = False
 
     # Variables for Redis
-    redis_host: str = "localhost"
+    redis_host: str = "test_task-redis"
     redis_port: int = 6379
     redis_user: Optional[str] = None
     redis_pass: Optional[str] = None
     redis_base: Optional[int] = None
 
     # Variables for RabbitMQ
-    rabbit_host: str = "localhost"
-    rabbit_port: int = 5432
+    rabbit_host: str = "test_task-rmq"
+    rabbit_port: int = 5672
     rabbit_user: str = "guest"
     rabbit_pass: str = "guest"
     rabbit_vhost: str = "/"
+    exchange_name: str = "test_task"
+    exchange_type: str = "direct"
 
     rabbit_pool_size: int = 2
     rabbit_channel_pool_size: int = 10

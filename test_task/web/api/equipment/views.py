@@ -1,6 +1,7 @@
+import json
 from typing import List
 
-from aio_pika import Channel, Message
+from aio_pika import Channel, DeliveryMode, Message
 from aio_pika.pool import Pool
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from tortoise.exceptions import ValidationError
@@ -14,6 +15,7 @@ from test_task.db.models.models import (
     Transaction,
 )
 from test_task.services.rabbit.dependencies import get_rmq_channel_pool
+from test_task.settings import settings
 from test_task.web.api.equipment.schema import (
     EquipmentModelDTO,
     EquipmentModelInputDTO,
@@ -139,55 +141,83 @@ async def delete_equipment_model(
 
 @router.post("/equip_item/")
 async def equip_item(
-    equip_object: EquipmentRMQMessageDTO,
+    equip_item_object: EquipmentRMQMessageDTO,
     pool: Pool[Channel] = Depends(get_rmq_channel_pool),
 ) -> None:
     """
     Equips equipment item to charcter.
 
-    :param equip_object: data for equip.
+    :param equip_item_object: data for equip.
     :param pool: rmq pool.
     """
-    async with pool.acquire() as conn:
-        exchange = await conn.declare_exchange(
-            name=equip_object.exchange_name,
+    async with pool.acquire() as channel:
+        exchange = await channel.declare_exchange(
+            name=settings.exchange_name,
             auto_delete=True,
         )
-        message_data = f"equip_{equip_object.character_id}_{equip_object.item_id}"
+        queue = await channel.declare_queue(
+            "queue_equip_item",
+        )
+        await queue.bind(
+            settings.exchange_name,
+            routing_key="rtk_equip_item",
+        )
+        message_data = json.dumps(
+            {
+                "character_id": equip_item_object.character_id,
+                "item_id": equip_item_object.item_id,
+                "action": "equip",
+            },
+        )
         await exchange.publish(
             message=Message(
                 body=message_data.encode("utf-8"),
                 content_encoding="utf-8",
-                content_type="text/plain",
+                content_type="application/json",
+                delivery_mode=DeliveryMode.PERSISTENT,
             ),
-            routing_key=equip_object.routing_key,
+            routing_key="rtk_equip_item",
         )
 
 
 @router.post("/equip_drop_item/")
 async def equip_drop_item(
-    equip_object: EquipmentRMQMessageDTO,
+    equip_item_object: EquipmentRMQMessageDTO,
     pool: Pool[Channel] = Depends(get_rmq_channel_pool),
 ) -> None:
     """
     Drops equipped item to charcter.
 
-    :param equip_object: data for equip.
+    :param equip_item_object: data for equip.
     :param pool: rmq pool.
     """
-    async with pool.acquire() as conn:
-        exchange = await conn.declare_exchange(
-            name=equip_object.exchange_name,
+    async with pool.acquire() as channel:
+        exchange = await channel.declare_exchange(
+            name=settings.exchange_name,
             auto_delete=True,
         )
-        message_data = f"drop_{equip_object.character_id}_{equip_object.item_id}"
+        queue = await channel.declare_queue(
+            "queue_equip_item",
+        )
+        await queue.bind(
+            settings.exchange_name,
+            routing_key="rtk_unequip_item",
+        )
+        message_data = json.dumps(
+            {
+                "character_id": equip_item_object.character_id,
+                "item_id": equip_item_object.item_id,
+                "action": "unequip",
+            },
+        )
         await exchange.publish(
             message=Message(
                 body=message_data.encode("utf-8"),
                 content_encoding="utf-8",
-                content_type="text/plain",
+                content_type="application/json",
+                delivery_mode=DeliveryMode.PERSISTENT,
             ),
-            routing_key=equip_object.routing_key,
+            routing_key="rtk_unequip_item",
         )
 
 

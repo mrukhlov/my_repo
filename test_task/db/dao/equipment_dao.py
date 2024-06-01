@@ -1,12 +1,16 @@
 from typing import Any, Dict, List, Optional
 
+import tortoise
+from loguru import logger
 from tortoise.exceptions import ValidationError
 
 from test_task.db.models.models import Character, CurrencyType, Equipment
 
 
 class EquipmentDAO:
-    """Class for accessing the equipment table."""
+    """Equipment DAO class."""
+
+    using_db: Optional[tortoise.BaseDBAsyncClient] = None
 
     async def create_equipment(
         self,
@@ -206,3 +210,53 @@ class EquipmentDAO:
 
         await equipment.save()
         return equipment
+
+    async def equip_item(
+        self,
+        data: Any,
+    ) -> None:
+        """
+        Equip item.
+
+        :param data: data.
+        :return: list of equipment.
+        """
+        try:
+            equipment = await Equipment.get(
+                id=data.item_id,
+                character_id=data.character_id,
+                equipped=False,
+                using_db=self.using_db,
+            )
+            if not equipment:
+                logger.error("Invalid item_id or already equipped.")
+                return
+            equipment.equipped = True
+            await equipment.save(using_db=self.using_db)
+        except tortoise.exceptions.DoesNotExist:
+            logger.error("Invalid item_id or already equipped.")
+
+    async def unequip_item(
+        self,
+        data: Any,
+    ) -> None:
+        """
+        Unequip item.
+
+        :param data: data.
+        :return: list of equipment.
+        """
+        try:
+            equipment = await Equipment.get(
+                id=data.item_id,
+                character_id=data.character_id,
+                equipped=True,
+                using_db=self.using_db,
+            )
+            if not equipment:
+                logger.error("Invalid item_id or already unequipped.")
+                return
+            equipment.equipped = False
+            await equipment.save(using_db=self.using_db)
+        except tortoise.exceptions.DoesNotExist:
+            logger.error("Invalid item_id or already unequipped.")

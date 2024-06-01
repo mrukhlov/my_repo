@@ -1,0 +1,23 @@
+version: '3.9'
+
+services:
+  equip_worker:
+    build:
+      context: .
+      dockerfile: ./deploy/Dockerfile.worker
+      target: dev
+    container_name: equip_worker_container
+    command: bash -c "python test_task/workers/equip_worker.py"
+    # command: bash -c "ls -la test_task/workers"
+    volumes:
+      # Adds current directory as volume.
+    - .:/app/src/
+    environment:
+      TEST_TASK_HOST: 0.0.0.0
+      TEST_TASK_DB_HOST: test_task-db
+      TEST_TASK_DB_PORT: 5432
+      TEST_TASK_DB_USER: test_task
+      TEST_TASK_DB_PASS: test_task
+      TEST_TASK_DB_BASE: test_task
+      TEST_TASK_RABBIT_HOST: test_task-rmq
+      TEST_TASK_REDIS_HOST: test_task-redis

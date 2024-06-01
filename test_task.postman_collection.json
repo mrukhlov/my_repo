@@ -333,7 +333,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"exchange_name\":\"equipment\",\n    \"routing_key\":\"equip\",\n    \"character_id\":1,\n    \"item_id\":1\n}",
+							"raw": "{\n    \"character_id\":1,\n    \"item_id\":2\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -356,7 +356,7 @@
 					"response": []
 				},
 				{
-					"name": "equip item drop",
+					"name": "unequip item",
 					"request": {
 						"auth": {
 							"type": "bearer",
@@ -372,7 +372,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"exchange_name\":\"equipment\",\n    \"routing_key\":\"equip\",\n    \"character_id\":1,\n    \"item_id\":1\n}",
+							"raw": "{\n    \"character_id\":1,\n    \"item_id\":2\n}",
 							"options": {
 								"raw": {
 									"language": "json"

@@ -73,7 +73,8 @@ services:
       retries: 50
 
   rmq:
-    image: rabbitmq:3-management
+    # image: rabbitmq:3-management
+    image: rabbitmq:3.13-management
     hostname: "test_task-rmq"
     restart: always
     environment:

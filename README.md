@@ -43,6 +43,14 @@ But you have to rebuild image every time you modify `poetry.lock` or `pyproject.
 docker-compose -f deploy/docker-compose.yml --project-directory . build
 ```
 
+### Workers
+
+Run worker with following command:
+
+```bash
+docker-compose -f deploy/docker-compose-worker.yml  --project-directory . up
+```
+
 ## Project structure
 
 ```bash
